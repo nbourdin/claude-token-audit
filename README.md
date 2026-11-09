@@ -32,13 +32,14 @@ Chaque action montre exactement ce qu'elle change avant d'être appliquée, se d
 | Désactiver un plugin | `enabledPlugins[plugin] = false` dans `~/.claude/settings.json` | Remet la valeur d'avant |
 | Archiver des skills | Déplace des skills jamais invoqués de `~/.claude/skills/` vers `~/.claude/skills-archived-by-token-audit/` | Les remet en place |
 | Agent sur Sonnet | Ajoute `model: sonnet` dans le frontmatter d'un agent qui coûte cher (fichier versionné du projet) | Retire la ligne |
-| Actions manuelles | Connecteurs claude.ai à couper, MEMORY.md à élaguer, règle de sortie courte : instructions + prompt prêt à coller dans Claude Code, puis « Marquer comme fait » | Retire le repère |
+| Alléger un fichier | Pour chaque CLAUDE.md, MEMORY.md ou note mémoire au-dessus de sa cible : prompt adapté au type de fichier, à lancer dans Claude Code, puis « Marquer comme fait ». La vérification compare la taille par chargement avant / après | Retire le repère |
+| Actions manuelles | Connecteurs claude.ai à couper, règle de sortie courte : instructions + prompt prêt à coller dans Claude Code, puis « Marquer comme fait » | Retire le repère |
 
 ### Vérification
 
 Chaque action appliquée est vérifiée dans les transcripts des sessions démarrées après elle, et le journal affiche son statut :
 
-- **Vérifiée** : l'élément a quitté le contexte (outils MCP, skills, plugin), le fichier a maigri, ou l'agent tourne sur le nouveau modèle.
+- **Vérifiée** : l'élément a quitté le contexte (outils MCP, skills, plugin), le fichier allégé est chargé à sa nouvelle taille, ou l'agent tourne sur le nouveau modèle.
 - **Effet partiel** ou **Sans effet** : il est encore chargé. L'outil cherche alors pourquoi (serveur aussi déclaré dans un `.mcp.json` ou pour un projet, plugin activé dans un `settings.json` de projet, skill revenu, connecteur claude.ai).
 - **En place** ou **Retirée à la main** : pour le garde-fou, on vérifie la présence du hook ; son effet se lit dans Avant / après.
 

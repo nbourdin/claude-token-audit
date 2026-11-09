@@ -1,5 +1,4 @@
 import { fixedContextCostUSD } from '../../analysis/detectors/detector-context.ts'
-import { formatTokens } from '../../analysis/format.ts'
 import { guessConnectorName } from '../../analysis/connector-name.ts'
 import { mcpServerOf } from '../../analysis/tool-server-name.ts'
 import type { ProposedAction } from '../action-types.ts'
@@ -7,7 +6,6 @@ import type { ProposalContext } from './proposal-context.ts'
 
 const UUID_SERVER_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-/
 const RARELY_USED_CALLS_PER_SESSION = 0.1
-const LARGE_MEMORY_TOKENS = 3_000
 const TRIM_SHARE = 0.5
 
 function proposeConnectorDisables({ allSessions, recentMetrics, rates }: ProposalContext): ProposedAction[] {
@@ -53,42 +51,6 @@ function proposeConnectorDisables({ allSessions, recentMetrics, rates }: Proposa
     })
 }
 
-function proposeMemoryTrims({ recentMetrics, rates }: ProposalContext): ProposedAction[] {
-  const memoryFiles = new Map<string, { tokens: number; sessions: number; monthlyCostUSD: number }>()
-  for (const metric of recentMetrics) {
-    for (const section of metric.session.contextSections) {
-      if (section.kind !== 'memory' || !section.label.startsWith('MEMORY.md')) continue
-      const tokens = section.chars * metric.tokensPerSectionChar
-      const entry = memoryFiles.get(section.label) ?? { tokens: 0, sessions: 0, monthlyCostUSD: 0 }
-      entry.tokens += tokens
-      entry.sessions += 1
-      entry.monthlyCostUSD += fixedContextCostUSD(tokens, metric, rates)
-      memoryFiles.set(section.label, entry)
-    }
-  }
-  return [...memoryFiles.entries()]
-    .filter(([, entry]) => entry.tokens / entry.sessions >= LARGE_MEMORY_TOKENS)
-    .map(([label, entry]) => {
-      const averageTokens = entry.tokens / entry.sessions
-      return {
-        key: `manual:memory:${label}`,
-        findingId: 'baseline-overhead',
-        title: `Élaguer ${label}`,
-        rationale: `L’index mémoire pèse ~${formatTokens(averageTokens)} tokens et il est chargé dans chaque session (${entry.sessions} sessions ces 30 derniers jours).`,
-        changes: [{ target: label, description: 'à faire dans Claude Code avec le prompt fourni (skill memory-audit si disponible)' }],
-        estimatedMonthlySavingUSD: entry.monthlyCostUSD * TRIM_SHARE,
-        project: null,
-        caveat: null,
-        payload: {
-          kind: 'manual',
-          instructions: 'Lance ce prompt dans une session Claude Code du projet, relis le diff, puis marque l’action comme faite.',
-          prompt: `Élague l'index MEMORY.md de ce projet : il fait ~${formatTokens(averageTokens)} tokens et il est chargé dans chaque session. Cible : moins de ${formatTokens(averageTokens * TRIM_SHARE)} tokens. Une ligne courte par entrée (titre + crochet de 10 mots max), fusionne les doublons, supprime les entrées périmées ou qui décrivent un état plutôt qu'une décision, et garde le détail dans les fichiers liés. Montre-moi la liste des entrées supprimées ou fusionnées avant d'écrire.`,
-        },
-        verification: { kind: 'footprint', footprint: { kind: 'context-section', label }, label },
-      }
-    })
-}
-
 function proposeQuietCommands({ recentReport }: ProposalContext): ProposedAction[] {
   const finding = recentReport.findings.find((candidate) => candidate.id === 'large-tool-results')
   const bashEvidence = finding?.evidence.filter((item) => item.label.startsWith('Bash:')) ?? []
@@ -115,5 +77,5 @@ function proposeQuietCommands({ recentReport }: ProposalContext): ProposedAction
 }
 
 export function proposeManualActions(context: ProposalContext): ProposedAction[] {
-  return [...proposeConnectorDisables(context), ...proposeMemoryTrims(context), ...proposeQuietCommands(context)]
+  return [...proposeConnectorDisables(context), ...proposeQuietCommands(context)]
 }

@@ -7,8 +7,7 @@ import { severityFor } from './detector-context.ts'
 export const detectOversizedContextFiles: Detector = ({ metrics, rates, totalCostUSD }) => {
   const oversized = buildContextFiles(metrics, rates).filter((file) => file.isOversized)
   if (oversized.length === 0) return null
-  const excessCostOf = (file: (typeof oversized)[number]) => file.costUSD * (1 - file.thresholdTokens / file.averageTokens)
-  const impactUSD = sum(oversized, excessCostOf)
+  const impactUSD = sum(oversized, (file) => file.excessCostUSD)
   return {
     id: 'oversized-context-files',
     title: 'Fichiers d’instructions et de mémoire trop lourds',

@@ -20,8 +20,6 @@ function footprintChars({ session }: SessionMetrics, footprint: ContextFootprint
       const skillNames = new Set(footprint.skillNames)
       return totalChars(session.listedSkills, (name) => skillNames.has(name))
     }
-    case 'context-section':
-      return session.contextSections.filter((section) => section.label === footprint.label).reduce((total, section) => total + section.chars, 0)
   }
 }
 

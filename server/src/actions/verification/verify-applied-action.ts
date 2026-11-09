@@ -3,6 +3,7 @@ import { config } from '../../config.ts'
 import { isContextGuardInstalled } from '../context-guard-hook-entry.ts'
 import { readJsonRecord } from '../json-file.ts'
 import { verifyAgentModel } from './verify-agent-model.ts'
+import { verifyContextFile } from './verify-context-file.ts'
 import { verifyFootprint } from './verify-footprint.ts'
 import type { VerificationWindow } from './verification-window.ts'
 
@@ -33,6 +34,8 @@ export function verifyAppliedAction(window: VerificationWindow, target: Verifica
       return verifyFootprint(window, target.footprint, target.label)
     case 'agent-model':
       return verifyAgentModel(window, target.agentType, target.model)
+    case 'context-file':
+      return verifyContextFile(window, target.path, target.thresholdTokens)
     case 'context-guard-hook':
       return verifyContextGuard(window, window.applied)
     case 'none':

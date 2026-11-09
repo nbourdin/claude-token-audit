@@ -82,6 +82,7 @@ export type ContextFileOrigin = 'startup' | 'nested' | 'read'
 
 export type ContextFileAggregate = {
   path: string
+  filePath: string
   category: ContextFileCategory
   origins: ContextFileOrigin[]
   sessions: number
@@ -91,6 +92,7 @@ export type ContextFileAggregate = {
   costUSD: number
   thresholdTokens: number
   isOversized: boolean
+  excessCostUSD: number
 }
 
 export type ModelSummary = {

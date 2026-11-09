@@ -7,6 +7,7 @@ import { activeAppliedKeys, readActionJournal } from './action-journal.ts'
 import type { ProposedAction } from './action-types.ts'
 import { proposeAgentModels } from './proposals/propose-agent-models.ts'
 import { proposeContextGuard } from './proposals/propose-context-guard.ts'
+import { proposeFileTrims } from './proposals/propose-file-trims.ts'
 import { proposeManualActions } from './proposals/propose-manual-actions.ts'
 import { proposeMcpServerRemovals } from './proposals/propose-mcp-server-removals.ts'
 import { proposePluginDisables } from './proposals/propose-plugin-disables.ts'
@@ -20,6 +21,7 @@ const PROPOSERS: Array<(context: ProposalContext) => ProposedAction[]> = [
   proposePluginDisables,
   proposeSkillArchives,
   proposeAgentModels,
+  proposeFileTrims,
   proposeManualActions,
 ]
 

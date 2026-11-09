@@ -17,11 +17,11 @@ export type ContextFootprint =
   | { kind: 'mcp-server'; serverName: string }
   | { kind: 'plugin'; pluginName: string }
   | { kind: 'skills'; skillNames: string[] }
-  | { kind: 'context-section'; label: string }
 
 export type VerificationTarget =
   | { kind: 'footprint'; footprint: ContextFootprint; label: string }
   | { kind: 'agent-model'; agentType: string; model: string }
+  | { kind: 'context-file'; path: string; thresholdTokens: number }
   | { kind: 'context-guard-hook' }
   | { kind: 'none' }
 
@@ -67,7 +67,7 @@ export type ActionVerification = {
   detail: string
   observed: number
   stillAffected: number
-  observedUnit: 'session' | 'run'
+  observedUnit: 'session' | 'run' | 'load'
   lastAffectedAt: number | null
   measuredMonthlySavingUSD: number | null
   measuredOverDays: number

@@ -20,8 +20,12 @@ export function contextFileCategory(path: string): ContextFileCategory | null {
   return null
 }
 
+export function canonicalContextFilePath(path: string): string {
+  return path.replace(WORKTREE_SEGMENT_PATTERN, '').replace(homedir(), '~')
+}
+
 export function displayContextFilePath(path: string): string {
   const memory = path.match(PROJECT_MEMORY_PATTERN)
   if (memory) return `mémoire ${memory[1]} / ${memory[2]}`
-  return path.replace(WORKTREE_SEGMENT_PATTERN, '').replace(homedir(), '~')
+  return canonicalContextFilePath(path)
 }
