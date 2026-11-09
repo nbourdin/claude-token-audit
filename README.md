@@ -1,6 +1,8 @@
 # Claude Token Audit
 
-Audit local de ta consommation Claude Code : ce qui passe par le modèle, ce que ça coûte, où ça fuit, et un plan d'action rédigé par Claude.
+Audit local de ta consommation Claude Code : ce qui passe par le modèle, ce que ça coûte, où ça fuit, et surtout **les actions pour corriger**, appliquées d'un clic, réversibles, et dont l'effet est mesuré.
+
+La boucle : **analyser** (constats chiffrés) → **agir** (onglet Actions) → **mesurer** (onglet Avant / après, alimenté automatiquement par chaque action).
 
 Tout est lu depuis `~/.claude/projects/**` (les transcripts JSONL de Claude Code, sous-agents compris). Rien ne sort de ta machine, sauf le résumé chiffré envoyé à `claude -p` quand tu demandes des conseils.
 
@@ -16,7 +18,23 @@ En CLI, sans dashboard :
 ```bash
 pnpm report       # constats des 30 derniers jours dans le terminal
 pnpm advise       # plan d'action de Claude (1 appel Sonnet, quelques centimes)
+pnpm actions      # actions proposées ; `pnpm actions <clé>` en applique une
 ```
+
+## Actions
+
+Chaque action montre exactement ce qu'elle change avant d'être appliquée, se défait d'un clic (journal dans `data/actions.json`), et pose un repère dans « Avant / après ». Les propositions sont recalculées à partir de l'usage réel sur tout l'historique : rien n'est proposé pour ce qui sert.
+
+| Action | Ce qu'elle change | Annuler |
+|---|---|---|
+| Garde-fou de contexte | Ajoute un hook `UserPromptSubmit` dans `~/.claude/settings.json` : alerte au-delà de 150k tokens de contexte (puis tous les 100k) et à la reprise d'une session après plus d'une heure (cache expiré). Ne bloque jamais, 60 ms. | Retire le hook |
+| Retirer un serveur MCP | Retire de `~/.claude.json` un serveur jamais appelé ; sa config est gardée dans le journal | Remet la config exacte |
+| Désactiver un plugin | `enabledPlugins[plugin] = false` dans `~/.claude/settings.json` | Remet la valeur d'avant |
+| Archiver des skills | Déplace des skills jamais invoqués de `~/.claude/skills/` vers `~/.claude/skills-archived-by-token-audit/` | Les remet en place |
+| Agent sur Sonnet | Ajoute `model: sonnet` dans le frontmatter d'un agent qui coûte cher (fichier versionné du projet) | Retire la ligne |
+| Actions manuelles | Connecteurs claude.ai à couper, MEMORY.md à élaguer, règle de sortie courte : instructions + prompt prêt à coller dans Claude Code, puis « Marquer comme fait » | Retire le repère |
+
+Pour tester sans toucher ta config : `AUDIT_CLAUDE_HOME`, `AUDIT_CLAUDE_JSON` et `AUDIT_DATA_DIR` pointent l'outil vers des copies.
 
 `pnpm start` construit le front et sert tout depuis `127.0.0.1:4747`.
 

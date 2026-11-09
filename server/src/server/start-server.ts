@@ -2,7 +2,11 @@ import { createReadStream, existsSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createServer } from 'node:http'
 import { extname, join, normalize } from 'node:path'
+import { readActionJournal } from '../actions/action-journal.ts'
+import { applyAction, undoAction } from '../actions/apply-action.ts'
+import { buildActionProposals } from '../actions/build-action-proposals.ts'
 import { readLatestAdvice, generateAdvice } from '../advice/generate-advice.ts'
+import { asRecord, asString } from '../transcripts/json-access.ts'
 import { buildMarkerComparisons } from '../analysis/build-marker-comparisons.ts'
 import { buildReport } from '../analysis/build-report.ts'
 import { buildSessionDetail } from '../analysis/build-session-detail.ts'
@@ -16,6 +20,7 @@ import { readJsonBody } from './read-json-body.ts'
 
 const DEFAULT_COMPARISON_WINDOW_DAYS = 7
 const MARKERS_PREFIX = '/api/markers/'
+const UNDO_ACTION_PATTERN = /^\/api\/actions\/([^/]+)\/undo$/
 
 const CONTENT_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -66,6 +71,15 @@ async function handleApi(request: IncomingMessage, response: ServerResponse, url
   if (pathname === '/api/report' && request.method === 'GET') {
     return sendJson(response, 200, { ...buildReport(sessions, filterFrom(url)), lastIngestAt, markers: readMarkers() })
   }
+  if (pathname === '/api/actions' && request.method === 'GET') {
+    return sendJson(response, 200, { proposals: buildActionProposals(sessions), applied: readActionJournal() })
+  }
+  if (pathname === '/api/actions/apply' && request.method === 'POST') {
+    const key = asString(asRecord(await readJsonBody(request))?.['key'])
+    return key ? sendJson(response, 200, { applied: applyAction(sessions, key) }) : sendJson(response, 400, { error: 'key is required' })
+  }
+  const undoMatch = pathname.match(UNDO_ACTION_PATTERN)
+  if (undoMatch && request.method === 'POST') return sendJson(response, 200, { undone: undoAction(decodeURIComponent(undoMatch[1] ?? '')) })
   if (pathname === '/api/markers' && request.method === 'GET') {
     const windowDays = Number(url.searchParams.get('windowDays')) || DEFAULT_COMPARISON_WINDOW_DAYS
     return sendJson(response, 200, { comparisons: buildMarkerComparisons(sessions, readMarkers(), windowDays) })

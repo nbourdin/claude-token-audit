@@ -2,7 +2,7 @@ import type { ListedItem } from '../model/session-summary.ts'
 
 const SKILLS_MARKER = 'The following skills are available for use with the Skill tool'
 const DEFERRED_TOOLS_MARKER = 'The following deferred tools are now available'
-const SKILL_LINE_PATTERN = /^- ([^:\n]+?)(?::|$)/
+const SKILL_LINE_PATTERN = /^- (\S+?)(?:: |:$|$)/
 const TOOL_NAME_PATTERN = /^[A-Za-z0-9_.:-]+$/
 
 function linesAfterMarker(text: string, marker: string): string[] {

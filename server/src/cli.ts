@@ -1,5 +1,7 @@
 import { buildReport } from './analysis/build-report.ts'
 import { formatTokens, formatUSD } from './analysis/format.ts'
+import { applyAction } from './actions/apply-action.ts'
+import { buildActionProposals } from './actions/build-action-proposals.ts'
 import { generateAdvice } from './advice/generate-advice.ts'
 import { runIngest } from './ingest/run-ingest.ts'
 import { startServer } from './server/start-server.ts'
@@ -38,7 +40,22 @@ async function adviseCommand(): Promise<void> {
   console.log(`\nAdvice cost: ${formatUSD(stored.costUSD)}`)
 }
 
+async function actionsCommand(): Promise<void> {
+  const { sessions } = await runIngest()
+  const keyToApply = process.argv[3]
+  if (keyToApply) {
+    const applied = applyAction(sessions, keyToApply)
+    console.log(`Applied: ${applied.title} (journal id ${applied.id})`)
+    return
+  }
+  for (const proposal of buildActionProposals(sessions)) {
+    console.log(`\n${proposal.key}\n  ${proposal.title} — ~${formatUSD(proposal.estimatedMonthlySavingUSD)}/mois\n  ${proposal.rationale}`)
+    for (const change of proposal.changes) console.log(`   · ${change.target} : ${change.description}`)
+  }
+}
+
 const commands: Record<string, () => Promise<void>> = {
+  actions: actionsCommand,
   ingest: ingestCommand,
   report: reportCommand,
   advise: adviseCommand,

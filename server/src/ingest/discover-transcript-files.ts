@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
+const PARSER_VERSION = 2
+
 export type TranscriptFile = {
   sessionId: string
   path: string
@@ -28,7 +30,7 @@ export function discoverTranscriptFiles(transcriptsDirectory: string): Transcrip
       const stats = statSync(path)
       const sessionId = fileName.slice(0, -'.jsonl'.length)
       const subagentsFingerprint = directoryFingerprint(join(projectPath, sessionId, 'subagents'))
-      files.push({ sessionId, path, fingerprint: `${stats.size}:${stats.mtimeMs}:${subagentsFingerprint.length}:${subagentsFingerprint.slice(-200)}` })
+      files.push({ sessionId, path, fingerprint: `v${PARSER_VERSION}:${stats.size}:${stats.mtimeMs}:${subagentsFingerprint.length}:${subagentsFingerprint.slice(-200)}` })
     }
   }
   return files

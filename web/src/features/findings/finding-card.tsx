@@ -1,5 +1,5 @@
 import type { Finding } from '@claude-token-audit/server/report-types'
-import { ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { InlineCodeText } from '@/components/inline-code-text'
 import { Button } from '@/components/ui/button'
@@ -12,10 +12,12 @@ import { SeverityBadge } from './severity-badge'
 type FindingCardProps = {
   finding: Finding
   totalCostUSD: number
+  actionCount: number
   onOpenSession: (sessionId: string) => void
+  onOpenActions: () => void
 }
 
-export function FindingCard({ finding, totalCostUSD, onOpenSession }: FindingCardProps) {
+export function FindingCard({ finding, totalCostUSD, actionCount, onOpenSession, onOpenActions }: FindingCardProps) {
   const [isExpanded, setIsExpanded] = useState(finding.severity === 'high')
   return (
     <Card>
@@ -41,6 +43,13 @@ export function FindingCard({ finding, totalCostUSD, onOpenSession }: FindingCar
               </li>
             ))}
           </ul>
+        )}
+        {actionCount > 0 && (
+          <div>
+            <Button size="sm" onClick={onOpenActions}>
+              {actionCount} action{actionCount > 1 ? 's' : ''} pour corriger <ArrowRight />
+            </Button>
+          </div>
         )}
         <div>
           <Button variant="ghost" size="sm" className="-ml-2" onClick={() => setIsExpanded((current) => !current)}>

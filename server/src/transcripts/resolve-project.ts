@@ -22,6 +22,12 @@ function findGitRoot(directory: string): string {
   return root
 }
 
+export function resolveRepositoryRoot(cwd: string): string | null {
+  if (!cwd || cwd.includes('scratch-workspaces')) return null
+  const worktreeMatch = cwd.match(WORKTREE_PATTERN)
+  return findGitRoot(worktreeMatch ? cwd.slice(0, worktreeMatch.index) : cwd)
+}
+
 export function resolveProject(cwd: string): ResolvedProject {
   if (!cwd) return { projectName: 'unknown', worktree: null }
   if (cwd.includes('scratch-workspaces')) return { projectName: 'scratch', worktree: null }

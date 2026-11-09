@@ -1,3 +1,4 @@
+import type { AppliedAction, ProposedAction } from '@claude-token-audit/server/action-types'
 import type { StoredAdvice } from '@claude-token-audit/server/advice-types'
 import type { MarkerComparison } from '@claude-token-audit/server/comparison-types'
 import type { ChangeMarker, NewChangeMarker } from '@claude-token-audit/server/marker-types'
@@ -29,4 +30,8 @@ export const api = {
   createMarker: (marker: NewChangeMarker) =>
     requestJson<{ marker: ChangeMarker }>('/api/markers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(marker) }),
   deleteMarker: (markerId: string) => requestJson<{ removed: boolean }>(`/api/markers/${encodeURIComponent(markerId)}`, { method: 'DELETE' }),
+  actions: () => requestJson<{ proposals: ProposedAction[]; applied: AppliedAction[] }>('/api/actions'),
+  applyAction: (key: string) =>
+    requestJson<{ applied: AppliedAction }>('/api/actions/apply', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key }) }),
+  undoAction: (appliedActionId: string) => requestJson<{ undone: AppliedAction }>(`/api/actions/${encodeURIComponent(appliedActionId)}/undo`, { method: 'POST' }),
 }

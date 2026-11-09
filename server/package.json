@@ -8,6 +8,7 @@
     "./session-detail-types": "./src/analysis/session-detail-types.ts",
     "./advice-types": "./src/advice/advice-schema.ts",
     "./marker-types": "./src/markers/change-marker.ts",
+    "./action-types": "./src/actions/action-types.ts",
     "./comparison-types": "./src/analysis/build-marker-comparisons.ts"
   },
   "scripts": {
@@ -16,6 +17,7 @@
     "ingest": "node src/cli.ts ingest",
     "report": "node src/cli.ts report",
     "advise": "node src/cli.ts advise",
+    "actions": "node src/cli.ts actions",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import { formatTokens, formatUSD } from '../format.ts'
+import { skillGroupOf } from '../skill-group.ts'
 import type { Finding } from '../report-types.ts'
 import type { Detector } from './detector-context.ts'
 import { fixedContextCostUSD, severityFor } from './detector-context.ts'
@@ -10,12 +11,6 @@ type SkillGroupUsage = {
   sessions: Set<string>
   costUSD: number
   invocations: number
-}
-
-function skillGroupOf(skillName: string): string {
-  if (skillName.includes(':')) return skillName.split(':').slice(0, -1).join(':').split(':')[0] ?? skillName
-  const prefix = skillName.split('-')[0] ?? skillName
-  return ['aws', 'cloudflare', 'figma', 'bmad', 'grill', 'workers'].includes(prefix) ? prefix : skillName
 }
 
 export const detectUnusedSkills: Detector = ({ metrics, rates, totalCostUSD }) => {

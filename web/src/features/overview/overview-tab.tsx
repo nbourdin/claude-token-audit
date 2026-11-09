@@ -13,10 +13,11 @@ import { DailyCostChart } from './daily-cost-chart'
 type OverviewTabProps = {
   report: AuditReport
   markers: ChangeMarker[]
+  pendingActionCount: number
   onOpenTab: (tab: AppTab) => void
 }
 
-export function OverviewTab({ report, markers, onOpenTab }: OverviewTabProps) {
+export function OverviewTab({ report, markers, pendingActionCount, onOpenTab }: OverviewTabProps) {
   const { totals } = report
   const topFinding = report.findings.find((finding) => finding.impactUSD > 0)
   return (
@@ -33,9 +34,16 @@ export function OverviewTab({ report, markers, onOpenTab }: OverviewTabProps) {
           title={`Premier levier : ${topFinding.title}`}
           description={topFinding.summary}
           action={
-            <Button variant="outline" size="sm" onClick={() => onOpenTab('findings')}>
-              Les {report.findings.length} constats <ArrowRight />
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => onOpenTab('findings')}>
+                Les {report.findings.length} constats
+              </Button>
+              {pendingActionCount > 0 && (
+                <Button size="sm" onClick={() => onOpenTab('actions')}>
+                  {pendingActionCount} actions <ArrowRight />
+                </Button>
+              )}
+            </div>
           }
         />
       )}
