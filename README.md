@@ -45,6 +45,13 @@ Chaque action appliquée est vérifiée dans les transcripts des sessions démar
 
 L'**économie mesurée** compare le contexte (ou le coût des exécutions d'agent) des sessions suivantes à la moyenne des 30 jours d'avant, sur l'activité réelle, ramenée au mois. Moins de 5 sessions observées = à confirmer.
 
+### Ce que l'outil touche sur ta machine
+
+- **Lecture seule** : `~/.claude/projects/**` (transcripts). Rien n'est envoyé ailleurs, sauf le résumé chiffré passé à `claude -p` quand tu demandes des conseils.
+- **Écriture, seulement quand tu cliques sur « Appliquer »** : `~/.claude.json`, `~/.claude/settings.json`, `~/.claude/skills/`, et le frontmatter d'un fichier d'agent. Chaque écriture est atomique et réversible depuis le journal.
+- **Journal local** : `data/actions.json` garde la config exacte des serveurs MCP retirés pour pouvoir les remettre, **jetons d'accès compris**. Le fichier est créé avec les droits `0600` et `data/` est exclu de git ; ne le partage pas.
+- **API locale** : elle n'écoute que sur `127.0.0.1` et refuse les requêtes dont l'hôte n'est pas `localhost` (protection contre le DNS rebinding) ou qui viennent d'un autre site (protection CSRF).
+
 Pour tester sans toucher ta config : `AUDIT_CLAUDE_HOME`, `AUDIT_CLAUDE_JSON` et `AUDIT_DATA_DIR` pointent l'outil vers des copies.
 
 `pnpm start` construit le front et sert tout depuis `127.0.0.1:4747`.
@@ -96,3 +103,7 @@ data/     cache et conseils générés (ignoré par git)
 Ajouter un constat = un fichier dans `server/src/analysis/detectors/` qui retourne un `Finding`, puis l'enregistrer dans `all-detectors.ts`.
 
 Variables : `CLAUDE_TRANSCRIPTS_DIR`, `AUDIT_API_PORT` (4747), `PORT` (Vite, 5174), `ADVICE_MODEL` (`sonnet`).
+
+## Licence
+
+MIT, voir [LICENSE](LICENSE).

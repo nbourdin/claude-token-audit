@@ -18,6 +18,7 @@ import { addMarker, readMarkers, removeMarker } from '../markers/marker-store.ts
 import { parseNewMarker } from '../markers/parse-new-marker.ts'
 import type { SessionSummary } from '../model/session-summary.ts'
 import { readJsonBody } from './read-json-body.ts'
+import { rejectionReason } from './request-origin-guard.ts'
 
 const DEFAULT_COMPARISON_WINDOW_DAYS = 7
 const MARKERS_PREFIX = '/api/markers/'
@@ -115,6 +116,8 @@ export async function startServer(): Promise<void> {
   const { parsedFiles, durationMs } = await refreshSessions()
   console.log(`Loaded ${sessions.length} sessions (${parsedFiles} re-parsed) in ${(durationMs / 1000).toFixed(1)}s`)
   const server = createServer((request, response) => {
+    const rejection = rejectionReason(request)
+    if (rejection) return sendJson(response, 403, { error: rejection })
     const url = new URL(request.url ?? '/', `http://${config.host}`)
     if (!url.pathname.startsWith('/api/')) return serveStatic(response, url.pathname)
     handleApi(request, response, url).catch((error: unknown) => {
