@@ -6,12 +6,30 @@ La boucle : **analyser** (constats chiffrés) → **agir** (onglet Actions) → 
 
 Tout est lu depuis `~/.claude/projects/**` (les transcripts JSONL de Claude Code, sous-agents compris). Rien ne sort de ta machine, sauf le résumé chiffré envoyé à `claude -p` quand tu demandes des conseils.
 
+![Vue d'ensemble : coût, contexte fixe, cache, coût par jour et par projet](docs/screenshots/overview.png)
+
+<sub>Captures faites sur le jeu de démo (`pnpm demo`) : sessions et projets fictifs.</sub>
+
+| Constats chiffrés | Actions en un clic |
+|---|---|
+| ![Constats classés par impact, avec le détail du contexte fixe](docs/screenshots/findings.png) | ![Actions proposées, avec ce qu'elles changent et l'économie estimée](docs/screenshots/actions.png) |
+| **Contexte, fichier par fichier** | **Effet vérifié et mesuré** |
+| ![CLAUDE.md et MEMORY.md trop lourds, avec leur coût](docs/screenshots/context.png) | ![Journal : action vérifiée dans les sessions suivantes, économie mesurée](docs/screenshots/journal.png) |
+
 ## Lancer
 
 ```bash
 pnpm install
 pnpm dev          # API sur 127.0.0.1:4747 + dashboard Vite sur http://127.0.0.1:5174
 ```
+
+Pour essayer sans historique, ou sans toucher à ta config :
+
+```bash
+pnpm demo         # dashboard sur http://127.0.0.1:4748 avec 64 sessions fictives sur 30 jours
+```
+
+La démo génère ses transcripts et une fausse config Claude (`~/.claude`, `~/.claude.json`) dans `data-demo/` : les actions s'y appliquent pour de vrai, sans rien toucher sur ta machine. Le dossier est régénéré à chaque lancement et peut être supprimé.
 
 En CLI, sans dashboard :
 

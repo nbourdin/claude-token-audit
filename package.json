@@ -14,6 +14,7 @@
     "start": "pnpm build && pnpm --filter @claude-token-audit/server run start",
     "report": "pnpm --filter @claude-token-audit/server run report",
     "advise": "pnpm --filter @claude-token-audit/server run advise",
-    "typecheck": "pnpm -r run typecheck"
+    "typecheck": "pnpm -r run typecheck",
+    "demo": "pnpm --filter @claude-token-audit/web run build && node server/src/demo/run-demo.ts"
   }
 }
