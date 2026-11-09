@@ -1,0 +1,19 @@
+{
+  "name": "claude-token-audit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Audit Claude Code token consumption from local transcripts, with a dashboard and Claude-generated advice",
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @claude-token-audit/server --filter @claude-token-audit/web run dev",
+    "build": "pnpm --filter @claude-token-audit/web run build",
+    "start": "pnpm build && pnpm --filter @claude-token-audit/server run start",
+    "report": "pnpm --filter @claude-token-audit/server run report",
+    "advise": "pnpm --filter @claude-token-audit/server run advise",
+    "typecheck": "pnpm -r run typecheck"
+  }
+}

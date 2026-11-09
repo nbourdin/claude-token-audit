@@ -1,0 +1,23 @@
+{
+  "name": "@claude-token-audit/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./report-types": "./src/analysis/report-types.ts",
+    "./session-detail-types": "./src/analysis/session-detail-types.ts",
+    "./advice-types": "./src/advice/advice-schema.ts"
+  },
+  "scripts": {
+    "dev": "node --watch-path=src src/cli.ts serve",
+    "start": "node src/cli.ts serve",
+    "ingest": "node src/cli.ts ingest",
+    "report": "node src/cli.ts report",
+    "advise": "node src/cli.ts advise",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

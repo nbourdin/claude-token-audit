@@ -1,0 +1,90 @@
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { createServer } from 'node:http'
+import { extname, join, normalize } from 'node:path'
+import { readLatestAdvice, generateAdvice } from '../advice/generate-advice.ts'
+import { buildReport } from '../analysis/build-report.ts'
+import { buildSessionDetail } from '../analysis/build-session-detail.ts'
+import type { ReportFilter } from '../analysis/report-types.ts'
+import { config } from '../config.ts'
+import { runIngest } from '../ingest/run-ingest.ts'
+import type { SessionSummary } from '../model/session-summary.ts'
+
+const CONTENT_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2',
+}
+
+let sessions: SessionSummary[] = []
+let lastIngestAt = 0
+let adviceInProgress = false
+
+async function refreshSessions(): Promise<{ parsedFiles: number; durationMs: number }> {
+  const result = await runIngest()
+  sessions = result.sessions
+  lastIngestAt = Date.now()
+  return { parsedFiles: result.parsedFiles, durationMs: result.durationMs }
+}
+
+function filterFrom(url: URL): ReportFilter {
+  const days = url.searchParams.get('days')
+  return {
+    sinceDays: days && days !== 'all' ? Number(days) : null,
+    project: url.searchParams.get('project') || null,
+  }
+}
+
+function sendJson(response: ServerResponse, status: number, body: unknown): void {
+  response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
+  response.end(JSON.stringify(body))
+}
+
+function serveStatic(response: ServerResponse, pathname: string): void {
+  if (!existsSync(config.webDistDirectory)) {
+    response.writeHead(503, { 'content-type': 'text/plain; charset=utf-8' }).end('Dashboard not built: run `pnpm build`, or `pnpm dev` and open the Vite URL.')
+    return
+  }
+  const requested = join(config.webDistDirectory, normalize(pathname))
+  const isFile = requested.startsWith(config.webDistDirectory) && existsSync(requested) && statSync(requested).isFile()
+  const filePath = isFile ? requested : join(config.webDistDirectory, 'index.html')
+  response.writeHead(200, { 'content-type': CONTENT_TYPES[extname(filePath)] ?? 'application/octet-stream' })
+  createReadStream(filePath).pipe(response)
+}
+
+async function handleApi(request: IncomingMessage, response: ServerResponse, url: URL): Promise<void> {
+  const { pathname } = url
+  if (pathname === '/api/report' && request.method === 'GET') return sendJson(response, 200, { ...buildReport(sessions, filterFrom(url)), lastIngestAt })
+  if (pathname === '/api/ingest' && request.method === 'POST') return sendJson(response, 200, await refreshSessions())
+  if (pathname.startsWith('/api/sessions/') && request.method === 'GET') {
+    const detail = buildSessionDetail(sessions, decodeURIComponent(pathname.slice('/api/sessions/'.length)))
+    return detail ? sendJson(response, 200, detail) : sendJson(response, 404, { error: 'session not found' })
+  }
+  if (pathname === '/api/advice' && request.method === 'GET') return sendJson(response, 200, { advice: readLatestAdvice(), inProgress: adviceInProgress })
+  if (pathname === '/api/advice' && request.method === 'POST') {
+    if (adviceInProgress) return sendJson(response, 409, { error: 'advice generation already running' })
+    adviceInProgress = true
+    try {
+      return sendJson(response, 200, { advice: await generateAdvice(buildReport(sessions, filterFrom(url))) })
+    } finally {
+      adviceInProgress = false
+    }
+  }
+  sendJson(response, 404, { error: 'unknown endpoint' })
+}
+
+export async function startServer(): Promise<void> {
+  const { parsedFiles, durationMs } = await refreshSessions()
+  console.log(`Loaded ${sessions.length} sessions (${parsedFiles} re-parsed) in ${(durationMs / 1000).toFixed(1)}s`)
+  const server = createServer((request, response) => {
+    const url = new URL(request.url ?? '/', `http://${config.host}`)
+    if (!url.pathname.startsWith('/api/')) return serveStatic(response, url.pathname)
+    handleApi(request, response, url).catch((error: unknown) => {
+      console.error(error)
+      sendJson(response, 500, { error: error instanceof Error ? error.message : String(error) })
+    })
+  })
+  server.listen(config.port, config.host, () => console.log(`Dashboard: http://${config.host}:${config.port}`))
+}
