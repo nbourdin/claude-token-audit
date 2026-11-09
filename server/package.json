@@ -6,7 +6,9 @@
   "exports": {
     "./report-types": "./src/analysis/report-types.ts",
     "./session-detail-types": "./src/analysis/session-detail-types.ts",
-    "./advice-types": "./src/advice/advice-schema.ts"
+    "./advice-types": "./src/advice/advice-schema.ts",
+    "./marker-types": "./src/markers/change-marker.ts",
+    "./comparison-types": "./src/analysis/build-marker-comparisons.ts"
   },
   "scripts": {
     "dev": "node --watch-path=src src/cli.ts serve",

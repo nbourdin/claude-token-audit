@@ -1,4 +1,5 @@
 import type { CostBreakdown } from '../cost/request-cost.ts'
+import type { ChangeMarker } from '../markers/change-marker.ts'
 import type { ContextSectionKind } from '../model/session-summary.ts'
 
 export type ReportFilter = {
@@ -114,4 +115,4 @@ export type AuditReport = {
   sessions: SessionRow[]
 }
 
-export type AuditReportResponse = AuditReport & { lastIngestAt: number }
+export type AuditReportResponse = AuditReport & { lastIngestAt: number; markers: ChangeMarker[] }

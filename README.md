@@ -34,6 +34,12 @@ pnpm advise       # plan d'action de Claude (1 appel Sonnet, quelques centimes)
 | Échecs d'outils | Chaque échec coûte un aller-retour modèle |
 | Sous-agents | Coût par type d'agent et par exécution |
 
+## Mesurer l'effet d'un changement
+
+Onglet **Avant / après** : note ce que tu as changé (connecteur coupé, `MEMORY.md` élagué, agents passés sur Sonnet…), à la date où tu l'as fait et pour un projet ou pour tous. L'audit compare les 7, 14 ou 30 jours d'avant et d'après sur des indicateurs ramenés au message et à la session (coût par message, contexte moyen, contexte fixe, cache réécrit, gros résultats d'outils, taux d'échec), pour que le volume d'activité ne fausse pas la lecture. Moins de 5 sessions d'un côté = résultat signalé comme à confirmer. Les changements apparaissent aussi en pointillés sur le graphique du coût par jour.
+
+Les changements sont stockés dans `data/markers.json`.
+
 ## Comment les coûts sont calculés
 
 Les montants sont en **équivalent prix API**, même sur un abonnement : c'est une unité commune pour comparer, pas une facture.

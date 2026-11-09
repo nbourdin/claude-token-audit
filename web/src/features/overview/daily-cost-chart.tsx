@@ -1,6 +1,7 @@
+import type { ChangeMarker } from '@claude-token-audit/server/marker-types'
 import type { AuditReport } from '@claude-token-audit/server/report-types'
 import { useMemo } from 'react'
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from 'recharts'
 import { ChartTooltipRow } from '@/components/chart-tooltip-row'
 import type { ChartConfig } from '@/components/ui/chart'
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
@@ -11,13 +12,19 @@ const OTHER_MODELS_KEY = 'other'
 
 type DailyCostChartProps = {
   report: AuditReport
+  markers: ChangeMarker[]
+}
+
+function localDay(timestamp: number): string {
+  const date = new Date(timestamp)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 function seriesKey(index: number): string {
   return `model${index}`
 }
 
-export function DailyCostChart({ report }: DailyCostChartProps) {
+export function DailyCostChart({ report, markers }: DailyCostChartProps) {
   const { rows, config, keys } = useMemo(() => {
     const models = report.models.map((model) => model.model)
     const kept = models.slice(0, MAX_MODEL_SERIES)
@@ -47,6 +54,13 @@ export function DailyCostChart({ report }: DailyCostChartProps) {
           cursor={{ fill: 'var(--muted)' }}
           content={<ChartTooltipContent labelFormatter={(value) => formatDay(String(value))} formatter={(value, name) => <ChartTooltipRow label={config[String(name)]?.label} color={config[String(name)]?.color} value={formatUSD(Number(value))} />} />}
         />
+        {markers
+          .filter((marker) => report.filter.project === null || marker.project === null || marker.project === report.filter.project)
+          .map((marker) => ({ marker, day: localDay(marker.at) }))
+          .filter(({ day }) => rows.some((row) => row['day'] === day))
+          .map(({ marker, day }) => (
+            <ReferenceLine key={marker.id} x={day} stroke="var(--foreground)" strokeDasharray="4 3" label={{ value: marker.label.slice(0, 28), position: 'insideTopLeft', fontSize: 11, fill: 'var(--muted-foreground)' }} />
+          ))}
         {keys.length > 1 && <ChartLegend content={<ChartLegendContent />} />}
         {keys.map((key, index) => (
           <Bar key={key} dataKey={key} stackId="cost" fill={`var(--color-${key})`} radius={index === keys.length - 1 ? [4, 4, 0, 0] : 0} stroke="var(--background)" strokeWidth={1} />

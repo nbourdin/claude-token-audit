@@ -1,3 +1,4 @@
+import type { ChangeMarker } from '@claude-token-audit/server/marker-types'
 import type { AuditReport } from '@claude-token-audit/server/report-types'
 import { ArrowRight } from 'lucide-react'
 import { KpiTile } from '@/components/kpi-tile'
@@ -11,10 +12,11 @@ import { DailyCostChart } from './daily-cost-chart'
 
 type OverviewTabProps = {
   report: AuditReport
+  markers: ChangeMarker[]
   onOpenTab: (tab: AppTab) => void
 }
 
-export function OverviewTab({ report, onOpenTab }: OverviewTabProps) {
+export function OverviewTab({ report, markers, onOpenTab }: OverviewTabProps) {
   const { totals } = report
   const topFinding = report.findings.find((finding) => finding.impactUSD > 0)
   return (
@@ -37,8 +39,8 @@ export function OverviewTab({ report, onOpenTab }: OverviewTabProps) {
           }
         />
       )}
-      <SectionCard title="Coût par jour" description="Équivalent prix API, par modèle">
-        <DailyCostChart report={report} />
+      <SectionCard title="Coût par jour" description="Équivalent prix API, par modèle. Les lignes pointillées marquent les changements notés dans « Avant / après ».">
+        <DailyCostChart report={report} markers={markers} />
       </SectionCard>
       <div className="grid gap-5 lg:grid-cols-2">
         <SectionCard title="Où part l’argent" description="La relecture du cache domine dès que le contexte est gros : chaque requête relit tout.">

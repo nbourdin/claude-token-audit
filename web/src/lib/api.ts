@@ -1,4 +1,6 @@
 import type { StoredAdvice } from '@claude-token-audit/server/advice-types'
+import type { MarkerComparison } from '@claude-token-audit/server/comparison-types'
+import type { ChangeMarker, NewChangeMarker } from '@claude-token-audit/server/marker-types'
 import type { AuditReportResponse, ReportFilter } from '@claude-token-audit/server/report-types'
 import type { SessionDetail } from '@claude-token-audit/server/session-detail-types'
 
@@ -23,4 +25,8 @@ export const api = {
   refresh: () => requestJson<{ parsedFiles: number; durationMs: number }>('/api/ingest', { method: 'POST' }),
   latestAdvice: () => requestJson<{ advice: StoredAdvice | null; inProgress: boolean }>('/api/advice'),
   generateAdvice: (filter: ReportFilter) => requestJson<{ advice: StoredAdvice }>(`/api/advice?${filterQueryString(filter)}`, { method: 'POST' }),
+  markerComparisons: (windowDays: number) => requestJson<{ comparisons: MarkerComparison[] }>(`/api/markers?windowDays=${windowDays}`),
+  createMarker: (marker: NewChangeMarker) =>
+    requestJson<{ marker: ChangeMarker }>('/api/markers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(marker) }),
+  deleteMarker: (markerId: string) => requestJson<{ removed: boolean }>(`/api/markers/${encodeURIComponent(markerId)}`, { method: 'DELETE' }),
 }

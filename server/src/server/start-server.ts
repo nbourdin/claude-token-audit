@@ -3,12 +3,19 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createServer } from 'node:http'
 import { extname, join, normalize } from 'node:path'
 import { readLatestAdvice, generateAdvice } from '../advice/generate-advice.ts'
+import { buildMarkerComparisons } from '../analysis/build-marker-comparisons.ts'
 import { buildReport } from '../analysis/build-report.ts'
 import { buildSessionDetail } from '../analysis/build-session-detail.ts'
 import type { ReportFilter } from '../analysis/report-types.ts'
 import { config } from '../config.ts'
 import { runIngest } from '../ingest/run-ingest.ts'
+import { addMarker, readMarkers, removeMarker } from '../markers/marker-store.ts'
+import { parseNewMarker } from '../markers/parse-new-marker.ts'
 import type { SessionSummary } from '../model/session-summary.ts'
+import { readJsonBody } from './read-json-body.ts'
+
+const DEFAULT_COMPARISON_WINDOW_DAYS = 7
+const MARKERS_PREFIX = '/api/markers/'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -56,7 +63,21 @@ function serveStatic(response: ServerResponse, pathname: string): void {
 
 async function handleApi(request: IncomingMessage, response: ServerResponse, url: URL): Promise<void> {
   const { pathname } = url
-  if (pathname === '/api/report' && request.method === 'GET') return sendJson(response, 200, { ...buildReport(sessions, filterFrom(url)), lastIngestAt })
+  if (pathname === '/api/report' && request.method === 'GET') {
+    return sendJson(response, 200, { ...buildReport(sessions, filterFrom(url)), lastIngestAt, markers: readMarkers() })
+  }
+  if (pathname === '/api/markers' && request.method === 'GET') {
+    const windowDays = Number(url.searchParams.get('windowDays')) || DEFAULT_COMPARISON_WINDOW_DAYS
+    return sendJson(response, 200, { comparisons: buildMarkerComparisons(sessions, readMarkers(), windowDays) })
+  }
+  if (pathname === '/api/markers' && request.method === 'POST') {
+    const parsed = parseNewMarker(await readJsonBody(request))
+    return typeof parsed === 'string' ? sendJson(response, 400, { error: parsed }) : sendJson(response, 201, { marker: addMarker(parsed) })
+  }
+  if (pathname.startsWith(MARKERS_PREFIX) && request.method === 'DELETE') {
+    const removed = removeMarker(decodeURIComponent(pathname.slice(MARKERS_PREFIX.length)))
+    return removed ? sendJson(response, 200, { removed: true }) : sendJson(response, 404, { error: 'marker not found' })
+  }
   if (pathname === '/api/ingest' && request.method === 'POST') return sendJson(response, 200, await refreshSessions())
   if (pathname.startsWith('/api/sessions/') && request.method === 'GET') {
     const detail = buildSessionDetail(sessions, decodeURIComponent(pathname.slice('/api/sessions/'.length)))
