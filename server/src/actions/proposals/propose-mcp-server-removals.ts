@@ -35,6 +35,7 @@ export function proposeMcpServerRemovals({ allSessions, recentMetrics, rates }: 
         project: null,
         caveat: 'S’applique à tous les projets, à partir des prochaines sessions. Annuler remet la config exacte.',
         payload: { kind: 'disable-mcp-server', serverName: server },
+        verification: { kind: 'footprint', footprint: { kind: 'mcp-server', serverName: server }, label: `outils du serveur « ${server} »` },
       }
     })
 }

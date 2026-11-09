@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-const PARSER_VERSION = 2
+const PARSER_VERSION = 3
 
 export type TranscriptFile = {
   sessionId: string

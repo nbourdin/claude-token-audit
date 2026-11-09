@@ -1,6 +1,7 @@
 import type {
   ApiRequest,
   ContextSection,
+  InjectedFile,
   ListedItem,
   ReportedModelUsage,
   ShapeChange,
@@ -11,6 +12,8 @@ import type {
 } from '../model/session-summary.ts'
 
 export type PendingToolCall = Omit<ToolCall, 'carriedRequests'>
+
+export type PendingInjectedFile = Omit<InjectedFile, 'carriedRequests'>
 
 export type SessionBuilder = {
   sessionId: string
@@ -25,6 +28,7 @@ export type SessionBuilder = {
   endedAt: number
   requestsByMessageId: Map<string, ApiRequest>
   toolCallsById: Map<string, PendingToolCall>
+  injectedFiles: PendingInjectedFile[]
   subagents: Subagent[]
   contextSections: ContextSection[]
   toolDefinitions: ToolDefinition[]
@@ -54,6 +58,7 @@ export function createSessionBuilder(sourceFile: string, sessionId: string): Ses
     endedAt: 0,
     requestsByMessageId: new Map(),
     toolCallsById: new Map(),
+    injectedFiles: [],
     subagents: [],
     contextSections: [],
     toolDefinitions: [],

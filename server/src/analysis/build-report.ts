@@ -9,6 +9,7 @@ import {
   buildToolAggregates,
   buildTotals,
 } from './build-overview.ts'
+import { buildContextFiles } from './build-context-files.ts'
 import { allDetectors } from './detectors/all-detectors.ts'
 import { filterSessions } from './filter-sessions.ts'
 import { sum } from './format.ts'
@@ -58,6 +59,7 @@ export function buildReport(allSessions: SessionSummary[], filter: ReportFilter)
     projectCosts: buildProjectCosts(metrics),
     models: buildModelSummaries(metrics, rates),
     baselineSections: buildBaselineSections(metrics, rates).slice(0, 25),
+    contextFiles: buildContextFiles(metrics, rates).slice(0, 60),
     tools: buildToolAggregates(metrics).slice(0, 40),
     findings,
     sessions: metrics.map(toSessionRow).sort((left, right) => right.startedAt - left.startedAt),

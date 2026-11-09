@@ -12,6 +12,13 @@ export function ActionsTab() {
   const { proposals, applied } = actions.data
   const automaticSavingUSD = proposals.filter((proposal) => proposal.payload.kind !== 'manual').reduce((total, proposal) => total + proposal.estimatedMonthlySavingUSD, 0)
   const manualSavingUSD = proposals.filter((proposal) => proposal.payload.kind === 'manual').reduce((total, proposal) => total + proposal.estimatedMonthlySavingUSD, 0)
+  const measured = applied.filter((action) => action.undoneAt === null && action.verification.measuredMonthlySavingUSD !== null)
+  const measuredSavingUSD = measured.reduce((total, action) => total + (action.verification.measuredMonthlySavingUSD ?? 0), 0)
+  const measuredEstimateUSD = measured.reduce((total, action) => total + action.estimatedMonthlySavingUSD, 0)
+  const journalSummary =
+    measured.length > 0
+      ? `Mesuré sur les sessions démarrées après chaque action : ≈ ${formatUSD(measuredSavingUSD)} / mois économisés, pour ${formatUSD(measuredEstimateUSD)} estimés. `
+      : ''
   return (
     <div className="grid gap-5">
       <SectionCard
@@ -23,7 +30,10 @@ export function ActionsTab() {
       ))}
       {proposals.length === 0 && <p className="py-12 text-center text-muted-foreground">Plus aucune action à proposer.</p>}
       {applied.length > 0 && (
-        <SectionCard title="Journal des actions" description="Annuler remet la configuration exacte d’avant et retire le repère avant/après.">
+        <SectionCard
+          title="Journal des actions"
+          description={`${journalSummary}Chaque action est vérifiée dans les transcripts des sessions suivantes. Annuler remet la configuration exacte d’avant et retire le repère avant/après.`}
+        >
           <AppliedActionsTable applied={applied} />
         </SectionCard>
       )}

@@ -34,6 +34,16 @@ Chaque action montre exactement ce qu'elle change avant d'être appliquée, se d
 | Agent sur Sonnet | Ajoute `model: sonnet` dans le frontmatter d'un agent qui coûte cher (fichier versionné du projet) | Retire la ligne |
 | Actions manuelles | Connecteurs claude.ai à couper, MEMORY.md à élaguer, règle de sortie courte : instructions + prompt prêt à coller dans Claude Code, puis « Marquer comme fait » | Retire le repère |
 
+### Vérification
+
+Chaque action appliquée est vérifiée dans les transcripts des sessions démarrées après elle, et le journal affiche son statut :
+
+- **Vérifiée** : l'élément a quitté le contexte (outils MCP, skills, plugin), le fichier a maigri, ou l'agent tourne sur le nouveau modèle.
+- **Effet partiel** ou **Sans effet** : il est encore chargé. L'outil cherche alors pourquoi (serveur aussi déclaré dans un `.mcp.json` ou pour un projet, plugin activé dans un `settings.json` de projet, skill revenu, connecteur claude.ai).
+- **En place** ou **Retirée à la main** : pour le garde-fou, on vérifie la présence du hook ; son effet se lit dans Avant / après.
+
+L'**économie mesurée** compare le contexte (ou le coût des exécutions d'agent) des sessions suivantes à la moyenne des 30 jours d'avant, sur l'activité réelle, ramenée au mois. Moins de 5 sessions observées = à confirmer.
+
 Pour tester sans toucher ta config : `AUDIT_CLAUDE_HOME`, `AUDIT_CLAUDE_JSON` et `AUDIT_DATA_DIR` pointent l'outil vers des copies.
 
 `pnpm start` construit le front et sert tout depuis `127.0.0.1:4747`.
@@ -43,6 +53,7 @@ Pour tester sans toucher ta config : `AUDIT_CLAUDE_HOME`, `AUDIT_CLAUDE_JSON` et
 | Constat | Ce qui est détecté |
 |---|---|
 | Contexte fixe | Tokens chargés avant ton premier message : prompt système, définitions d'outils, skills, outils MCP différés, CLAUDE.md, MEMORY.md, découpés bloc par bloc |
+| Fichiers trop lourds | CLAUDE.md, MEMORY.md, notes mémoire et fichiers `.claude` au-delà de leur taille cible, qu'ils soient chargés au démarrage, ajoutés quand Claude entre dans un dossier (CLAUDE.md imbriqués) ou lus par Claude. Détail par fichier dans l'onglet Contexte |
 | Serveurs MCP inutilisés | Serveurs et connecteurs dont les outils sont injectés à chaque requête mais (presque) jamais appelés |
 | Skills jamais invoqués | Descriptions de skills relues à chaque requête sans un seul appel sur la période |
 | Cache réécrit | Requêtes qui repaient tout le contexte au prix d'écriture, avec la cause : pause > TTL, compaction, changement de modèle, outils modifiés |

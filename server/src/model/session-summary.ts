@@ -40,6 +40,15 @@ export type ContextSection = {
   label: string
   kind: ContextSectionKind
   chars: number
+  filePath?: string
+}
+
+export type InjectedFile = {
+  path: string
+  chars: number
+  at: number
+  threadId: string
+  carriedRequests: number
 }
 
 export type ListedItem = {
@@ -87,6 +96,7 @@ export type SessionSummary = {
   endedAt: number
   requests: ApiRequest[]
   toolCalls: ToolCall[]
+  injectedFiles: InjectedFile[]
   subagents: Subagent[]
   contextSections: ContextSection[]
   toolDefinitions: ToolDefinition[]

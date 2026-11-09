@@ -1,6 +1,7 @@
 import type { CostBreakdown } from '../cost/request-cost.ts'
 import type { ChangeMarker } from '../markers/change-marker.ts'
 import type { ContextSectionKind } from '../model/session-summary.ts'
+import type { ContextFileCategory } from './context-file-category.ts'
 
 export type ReportFilter = {
   sinceDays: number | null
@@ -77,6 +78,21 @@ export type BaselineSectionAggregate = {
   costUSD: number
 }
 
+export type ContextFileOrigin = 'startup' | 'nested' | 'read'
+
+export type ContextFileAggregate = {
+  path: string
+  category: ContextFileCategory
+  origins: ContextFileOrigin[]
+  sessions: number
+  loads: number
+  averageTokens: number
+  maxTokens: number
+  costUSD: number
+  thresholdTokens: number
+  isOversized: boolean
+}
+
 export type ModelSummary = {
   model: string
   costUSD: number
@@ -110,6 +126,7 @@ export type AuditReport = {
   projectCosts: ProjectCost[]
   models: ModelSummary[]
   baselineSections: BaselineSectionAggregate[]
+  contextFiles: ContextFileAggregate[]
   tools: ToolAggregate[]
   findings: Finding[]
   sessions: SessionRow[]

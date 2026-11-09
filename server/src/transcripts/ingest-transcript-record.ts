@@ -1,5 +1,6 @@
 import { MAIN_THREAD_ID } from '../model/session-summary.ts'
 import { handleAssistantRecord } from './handle-assistant-record.ts'
+import { handleAttachmentRecord } from './handle-attachment-record.ts'
 import { captureSessionMetadata, handleCostStateRecord, handleSystemRecord, handleTitleRecord } from './handle-metadata-record.ts'
 import { handleRequestBlobRecord, handleRequestRecord, handleRequestShapeRecord } from './handle-request-records.ts'
 import { handleUserRecord } from './handle-user-record.ts'
@@ -37,6 +38,8 @@ export function ingestTranscriptRecord(builder: SessionBuilder, record: JsonReco
     case 'api-request-blob':
       if (isMainThread) handleRequestBlobRecord(builder, record)
       return
+    case 'attachment':
+      return handleAttachmentRecord(builder, record, threadId, at)
     case 'cost-state':
       if (isMainThread) handleCostStateRecord(builder, record)
       return

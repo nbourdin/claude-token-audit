@@ -1,6 +1,8 @@
 import { buildReport } from './analysis/build-report.ts'
 import { formatTokens, formatUSD } from './analysis/format.ts'
+import { readActionJournal } from './actions/action-journal.ts'
 import { applyAction } from './actions/apply-action.ts'
+import { buildAppliedActionViews } from './actions/verification/build-applied-action-views.ts'
 import { buildActionProposals } from './actions/build-action-proposals.ts'
 import { generateAdvice } from './advice/generate-advice.ts'
 import { runIngest } from './ingest/run-ingest.ts'
@@ -51,6 +53,11 @@ async function actionsCommand(): Promise<void> {
   for (const proposal of buildActionProposals(sessions)) {
     console.log(`\n${proposal.key}\n  ${proposal.title} — ~${formatUSD(proposal.estimatedMonthlySavingUSD)}/mois\n  ${proposal.rationale}`)
     for (const change of proposal.changes) console.log(`   · ${change.target} : ${change.description}`)
+  }
+  for (const applied of buildAppliedActionViews(sessions, readActionJournal())) {
+    const { status, detail, measuredMonthlySavingUSD } = applied.verification
+    const measured = measuredMonthlySavingUSD === null ? '' : ` — mesuré ~${formatUSD(measuredMonthlySavingUSD)}/mois`
+    console.log(`\n[${status}] ${applied.title} (estimé ~${formatUSD(applied.estimatedMonthlySavingUSD)}/mois${measured})\n  ${detail}`)
   }
 }
 

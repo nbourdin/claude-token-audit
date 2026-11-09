@@ -1,8 +1,8 @@
-import type { ApiRequest, SessionSummary, ToolCall } from '../model/session-summary.ts'
+import type { ApiRequest, SessionSummary } from '../model/session-summary.ts'
 import { MAIN_THREAD_ID } from '../model/session-summary.ts'
 import { mergeSections } from './split-context-sections.ts'
 import { resolveProject } from './resolve-project.ts'
-import type { PendingToolCall, SessionBuilder } from './session-builder.ts'
+import type { SessionBuilder } from './session-builder.ts'
 
 function countLaterRequests(sortedTimes: number[], after: number, before: number): number {
   let low = 0
@@ -21,17 +21,17 @@ function nextCompactionAfter(compactionsAt: number[], at: number): number {
   return compactionsAt.find((compactionAt) => compactionAt > at) ?? Number.POSITIVE_INFINITY
 }
 
-function withCarriedRequests(toolCalls: PendingToolCall[], requests: ApiRequest[], compactionsAt: number[]): ToolCall[] {
+function withCarriedRequests<Item extends { at: number; threadId: string }>(items: Item[], requests: ApiRequest[], compactionsAt: number[]): Array<Item & { carriedRequests: number }> {
   const timesByThread = new Map<string, number[]>()
   for (const request of requests) {
     const times = timesByThread.get(request.threadId) ?? []
     times.push(request.at)
     timesByThread.set(request.threadId, times)
   }
-  return toolCalls.map((toolCall) => {
-    const times = timesByThread.get(toolCall.threadId) ?? []
-    const before = toolCall.threadId === MAIN_THREAD_ID ? nextCompactionAfter(compactionsAt, toolCall.at) : Number.POSITIVE_INFINITY
-    return { ...toolCall, carriedRequests: countLaterRequests(times, toolCall.at, before) }
+  return items.map((item) => {
+    const times = timesByThread.get(item.threadId) ?? []
+    const before = item.threadId === MAIN_THREAD_ID ? nextCompactionAfter(compactionsAt, item.at) : Number.POSITIVE_INFINITY
+    return { ...item, carriedRequests: countLaterRequests(times, item.at, before) }
   })
 }
 
@@ -54,6 +54,7 @@ export function finalizeSession(builder: SessionBuilder): SessionSummary | null 
     endedAt: builder.endedAt,
     requests,
     toolCalls: withCarriedRequests([...builder.toolCallsById.values()], requests, compactionsAt),
+    injectedFiles: withCarriedRequests(builder.injectedFiles, requests, compactionsAt),
     subagents: builder.subagents,
     contextSections: mergeSections(builder.contextSections),
     toolDefinitions: builder.toolDefinitions,

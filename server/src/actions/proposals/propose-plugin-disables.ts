@@ -40,6 +40,7 @@ export function proposePluginDisables({ allSessions, recentMetrics, rates }: Pro
         project: null,
         caveat: 'Désactivé, pas désinstallé : Annuler le réactive.',
         payload: { kind: 'disable-plugin', pluginId },
+        verification: { kind: 'footprint', footprint: { kind: 'plugin', pluginName: name }, label: `skills et outils du plugin « ${name} »` },
       }
     })
 }

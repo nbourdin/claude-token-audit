@@ -5,6 +5,7 @@ type SectionMarker = {
   label: string
   kind: ContextSectionKind
   headingLevel: number
+  filePath?: string
 }
 
 const FIXED_MARKERS: Array<{ pattern: RegExp; label: string; kind: ContextSectionKind }> = [
@@ -38,7 +39,7 @@ function collectMarkers(text: string): SectionMarker[] {
   }
   for (const match of text.matchAll(FILE_CONTENTS_PATTERN)) {
     const filePath = match[1] ?? ''
-    markers.push({ index: match.index, label: shortenPath(filePath), kind: fileSectionKind(filePath), headingLevel: 0 })
+    markers.push({ index: match.index, label: shortenPath(filePath), kind: fileSectionKind(filePath), headingLevel: 0, filePath })
   }
   for (const match of text.matchAll(HEADING_PATTERN)) {
     const heading = (match[2] ?? '').trim()
@@ -73,7 +74,7 @@ export function splitContextSections(text: string, defaultLabel: string, default
   if (firstIndex > 0) sections.push({ label: defaultLabel, kind: defaultKind, chars: firstIndex })
   markers.forEach((marker, position) => {
     const end = markers[position + 1]?.index ?? text.length
-    sections.push({ label: marker.label, kind: marker.kind, chars: end - marker.index })
+    sections.push({ label: marker.label, kind: marker.kind, chars: end - marker.index, ...(marker.filePath ? { filePath: marker.filePath } : {}) })
   })
   return sections
 }

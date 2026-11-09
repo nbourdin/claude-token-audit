@@ -2,6 +2,7 @@ import type { AuditReport, BaselineSectionAggregate } from '@claude-token-audit/
 import { RankedBarList } from '@/components/ranked-bar-list'
 import { SectionCard } from '@/components/section-card'
 import { formatTokens, formatUSD } from '@/lib/format'
+import { ContextFilesTable } from './context-files-table'
 import { ModelPricesTable } from './model-prices-table'
 import { ToolsTable } from './tools-table'
 
@@ -19,8 +20,15 @@ const KIND_LABELS: Record<BaselineSectionAggregate['kind'], string> = {
 const MCP_PREFIX_PATTERN = /^mcp__.+?__/
 
 export function ContextTab({ report }: { report: AuditReport }) {
+  const oversizedCount = report.contextFiles.filter((file) => file.isOversized).length
   return (
     <div className="grid gap-5">
+      <SectionCard
+        title="Fichiers d’instructions et de mémoire"
+        description={`CLAUDE.md, MEMORY.md, notes mémoire et fichiers .claude, qu’ils soient chargés au démarrage, ajoutés quand Claude entre dans un dossier, ou lus par Claude. ${oversizedCount > 1 ? `${oversizedCount} dépassent leur taille cible.` : oversizedCount === 1 ? 'Un fichier dépasse sa taille cible.' : 'Tous sont sous leur taille cible.'} Le coût inclut les relectures à chaque requête suivante.`}
+      >
+        <ContextFilesTable files={report.contextFiles} />
+      </SectionCard>
       <div className="grid gap-5 lg:grid-cols-2">
         <SectionCard title="Contexte fixe, par bloc" description="Chargé avant ton premier message, en tokens par requête (moyenne). Survole pour le coût cumulé.">
           <RankedBarList

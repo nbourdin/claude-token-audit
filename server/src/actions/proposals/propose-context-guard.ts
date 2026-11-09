@@ -33,6 +33,7 @@ export function proposeContextGuard({ recentReport, rates, recentMetrics }: Prop
         idleMinutes: IDLE_MINUTES,
         inputPricePerMillion: rates.inputPriceFor(mainModel) * 1_000_000,
       },
+      verification: { kind: 'context-guard-hook' },
     },
   ]
 }

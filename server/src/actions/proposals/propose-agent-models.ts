@@ -28,6 +28,7 @@ function displayPath(path: string): string {
 }
 
 export function proposeAgentModels({ recentMetrics, rates }: ProposalContext): ProposedAction[] {
+  const savingShareOf = (model: string) => Math.max(0, 1 - rates.inputPriceFor('claude-sonnet-5-5') / rates.inputPriceFor(model))
   const spendByFile = new Map<string, AgentSpend>()
   for (const metric of recentMetrics) {
     for (const subagent of metric.session.subagents) {
@@ -43,8 +44,9 @@ export function proposeAgentModels({ recentMetrics, rates }: ProposalContext): P
   return [...spendByFile.values()]
     .filter((spend) => spend.costUSD >= MINIMUM_MONTHLY_COST_USD)
     .filter((spend) => !CHEAP_MODELS.has(readAgentModel(readFileSync(spend.agentFilePath, 'utf8')) ?? ''))
+    .filter((spend) => savingShareOf(spend.mainModel) > 0)
     .map((spend) => {
-      const savingShare = Math.max(0, 1 - rates.inputPriceFor('claude-sonnet-5-5') / rates.inputPriceFor(spend.mainModel))
+      const savingShare = savingShareOf(spend.mainModel)
       const writesCode = CODE_WRITING_AGENT_PATTERN.test(spend.agentType)
       return {
         key: `agent-model:${spend.agentFilePath}`,
@@ -58,6 +60,7 @@ export function proposeAgentModels({ recentMetrics, rates }: ProposalContext): P
           ? 'Agent qui écrit du code : compare la qualité sur quelques tâches. Fichier versionné : le changement apparaîtra dans git.'
           : 'Fichier versionné : le changement apparaîtra dans git. Annuler retire la ligne.',
         payload: { kind: 'agent-model', agentFilePath: spend.agentFilePath, agentType: spend.agentType, model: TARGET_MODEL },
+        verification: { kind: 'agent-model', agentType: spend.agentType, model: TARGET_MODEL },
       }
     })
 }

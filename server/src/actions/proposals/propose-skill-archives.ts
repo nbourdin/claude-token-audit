@@ -36,6 +36,7 @@ export function proposeSkillArchives({ allSessions, recentMetrics, rates }: Prop
       project: null,
       caveat: 'Déplacement, pas suppression : Annuler remet les dossiers en place.',
       payload: { kind: 'archive-skills', skillNames },
+      verification: { kind: 'footprint', footprint: { kind: 'skills', skillNames }, label: skillNames.length > 1 ? `${skillNames.length} skills « ${group} »` : `skill « ${group} »` },
     }
   })
 }

@@ -22,6 +22,7 @@ export function applyAction(allSessions: SessionSummary[], proposalKey: string):
     markerId: marker.id,
     undo,
     undoneAt: null,
+    verification: proposal.verification,
   }
   writeActionJournal([applied, ...readActionJournal()])
   return applied

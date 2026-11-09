@@ -5,6 +5,7 @@ import { extname, join, normalize } from 'node:path'
 import { readActionJournal } from '../actions/action-journal.ts'
 import { applyAction, undoAction } from '../actions/apply-action.ts'
 import { buildActionProposals } from '../actions/build-action-proposals.ts'
+import { buildAppliedActionViews } from '../actions/verification/build-applied-action-views.ts'
 import { readLatestAdvice, generateAdvice } from '../advice/generate-advice.ts'
 import { asRecord, asString } from '../transcripts/json-access.ts'
 import { buildMarkerComparisons } from '../analysis/build-marker-comparisons.ts'
@@ -72,14 +73,14 @@ async function handleApi(request: IncomingMessage, response: ServerResponse, url
     return sendJson(response, 200, { ...buildReport(sessions, filterFrom(url)), lastIngestAt, markers: readMarkers() })
   }
   if (pathname === '/api/actions' && request.method === 'GET') {
-    return sendJson(response, 200, { proposals: buildActionProposals(sessions), applied: readActionJournal() })
+    return sendJson(response, 200, { proposals: buildActionProposals(sessions), applied: buildAppliedActionViews(sessions, readActionJournal()) })
   }
   if (pathname === '/api/actions/apply' && request.method === 'POST') {
     const key = asString(asRecord(await readJsonBody(request))?.['key'])
-    return key ? sendJson(response, 200, { applied: applyAction(sessions, key) }) : sendJson(response, 400, { error: 'key is required' })
+    return key ? sendJson(response, 200, { appliedId: applyAction(sessions, key).id }) : sendJson(response, 400, { error: 'key is required' })
   }
   const undoMatch = pathname.match(UNDO_ACTION_PATTERN)
-  if (undoMatch && request.method === 'POST') return sendJson(response, 200, { undone: undoAction(decodeURIComponent(undoMatch[1] ?? '')) })
+  if (undoMatch && request.method === 'POST') return sendJson(response, 200, { undoneId: undoAction(decodeURIComponent(undoMatch[1] ?? '')).id })
   if (pathname === '/api/markers' && request.method === 'GET') {
     const windowDays = Number(url.searchParams.get('windowDays')) || DEFAULT_COMPARISON_WINDOW_DAYS
     return sendJson(response, 200, { comparisons: buildMarkerComparisons(sessions, readMarkers(), windowDays) })

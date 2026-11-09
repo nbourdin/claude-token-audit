@@ -48,6 +48,7 @@ function proposeConnectorDisables({ allSessions, recentMetrics, rates }: Proposa
         project: null,
         caveat: 'Les connecteurs claude.ai sont injectés par l’app : aucun fichier local ne les contrôle. Marque l’action comme faite pour suivre l’effet.',
         payload: { kind: 'manual', instructions: `Désactive le connecteur ${name} dans claude.ai (Paramètres → Connecteurs). Tu pourras le réactiver le jour où tu en as besoin.`, prompt: null },
+        verification: { kind: 'footprint', footprint: { kind: 'mcp-server', serverName: server }, label: `outils du connecteur « ${name} »` },
       }
     })
 }
@@ -83,6 +84,7 @@ function proposeMemoryTrims({ recentMetrics, rates }: ProposalContext): Proposed
           instructions: 'Lance ce prompt dans une session Claude Code du projet, relis le diff, puis marque l’action comme faite.',
           prompt: `Élague l'index MEMORY.md de ce projet : il fait ~${formatTokens(averageTokens)} tokens et il est chargé dans chaque session. Cible : moins de ${formatTokens(averageTokens * TRIM_SHARE)} tokens. Une ligne courte par entrée (titre + crochet de 10 mots max), fusionne les doublons, supprime les entrées périmées ou qui décrivent un état plutôt qu'une décision, et garde le détail dans les fichiers liés. Montre-moi la liste des entrées supprimées ou fusionnées avant d'écrire.`,
         },
+        verification: { kind: 'footprint', footprint: { kind: 'context-section', label }, label },
       }
     })
 }
@@ -107,6 +109,7 @@ function proposeQuietCommands({ recentReport }: ProposalContext): ProposedAction
         instructions: 'Lance ce prompt dans Claude Code, relis le diff, puis marque l’action comme faite.',
         prompt: `Ajoute dans ~/.claude/CLAUDE.md une règle courte : « Sorties de commandes : limite ce qui entre dans le contexte. Tests, typecheck, build, lint et logs passent par un filtre (| tail -40, grep -E "error|FAIL|✗", --reporter=dot, --silent). Ne cat jamais un fichier de plus de 300 lignes : Grep puis Read avec offset/limit. » Familles de commandes les plus coûteuses chez moi : ${commandFamilies.join(', ')}. Adapte les exemples de filtre à ces commandes.`,
       },
+      verification: { kind: 'none' },
     },
   ]
 }

@@ -13,6 +13,18 @@ export type ActionChange = {
   description: string
 }
 
+export type ContextFootprint =
+  | { kind: 'mcp-server'; serverName: string }
+  | { kind: 'plugin'; pluginName: string }
+  | { kind: 'skills'; skillNames: string[] }
+  | { kind: 'context-section'; label: string }
+
+export type VerificationTarget =
+  | { kind: 'footprint'; footprint: ContextFootprint; label: string }
+  | { kind: 'agent-model'; agentType: string; model: string }
+  | { kind: 'context-guard-hook' }
+  | { kind: 'none' }
+
 export type ProposedAction = {
   key: string
   findingId: string | null
@@ -23,6 +35,7 @@ export type ProposedAction = {
   project: string | null
   caveat: string | null
   payload: ActionPayload
+  verification: VerificationTarget
 }
 
 export type UndoRecord =
@@ -44,6 +57,24 @@ export type AppliedAction = {
   markerId: string | null
   undo: UndoRecord
   undoneAt: number | null
+  verification?: VerificationTarget
+}
+
+export type VerificationStatus = 'waiting' | 'effective' | 'partial' | 'ineffective' | 'in-place' | 'missing' | 'not-verifiable' | 'undone'
+
+export type ActionVerification = {
+  status: VerificationStatus
+  detail: string
+  observed: number
+  stillAffected: number
+  observedUnit: 'session' | 'run'
+  lastAffectedAt: number | null
+  measuredMonthlySavingUSD: number | null
+  measuredOverDays: number
+}
+
+export type AppliedActionView = Omit<AppliedAction, 'undo' | 'verification'> & {
+  verification: ActionVerification
 }
 
 export type ActionHandler = {
